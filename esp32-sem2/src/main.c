@@ -2,6 +2,7 @@
 #include <freertos/task.h>
 #include <freertos/semphr.h>
 #include "esp_log.h"
+#include "esp_random.h"
 
 #define TASK_STACK_SIZE                 2048
 #define NUM_TASKS                       5
@@ -32,8 +33,8 @@ void app_main()
     vTaskPrioritySet(NULL, TASK_MAIN_PRIORITY);
 
 	/* Create semaphore */
-    SemaphoreHandle_t xSemaphore = ....;
-    if (....)
+    SemaphoreHandle_t xSemaphore = xSemaphoreCreateCounting(NUM_RESOURCES, SEMPHR_INITIAL_VALUE);
+    if (xSemaphore == NULL)
     {
         ESP_LOGE(TAG, "[app_main] Error creating semaphore.");
         exit(EXIT_FAILURE);
@@ -72,11 +73,11 @@ void vTask(void * param)
     {
         ESP_LOGI(TAG, "[vTask] Task %d attempts to use resource...", TaskData.taskID);
 		/* Wait for the semaphore */
-        if (.....)
+        if (xSemaphoreTake(TaskData.xSemaphore, portMAX_DELAY) == pdTRUE)
         {
             UseResource(TaskData.taskID);
 			/* Signal the semaphore */
-            .....;
+            xSemaphoreGive(TaskData.xSemaphore);
         }
         else
         {
