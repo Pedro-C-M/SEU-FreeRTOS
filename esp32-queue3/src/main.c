@@ -2,6 +2,7 @@
 #include <freertos/task.h>
 #include <freertos/queue.h>
 #include "esp_log.h"
+#include "esp_random.h"
 
 #define TASK_STACK_SIZE                 2048
 #define TASK_ACQ_PRIORITY               5
@@ -38,8 +39,8 @@ void app_main()
     TaskHandle_t xHandleDisp = NULL;            
 
 	/* Create the queue set */
-    QueueSetHandle_t xQueueSet = ...;
-
+    QueueSetHandle_t xQueueSet = xQueueCreateSet(NUM_ACQ_SENSORS * HT_QUEUE_LENGTH);
+    
     for (unsigned int i = 0; i < NUM_ACQ_SENSORS; i++)
     {
         xHTQueue[i] = xQueueCreate(HT_QUEUE_LENGTH, sizeof(t_HTreading));
@@ -50,7 +51,7 @@ void app_main()
         }
 
 		/* Add the queue to the set */
-        ...;
+        xQueueAddToSet(xHTQueue[i], xQueueSet);
 
         t_SensorParam param;
         param.sensorID = i;
@@ -113,9 +114,9 @@ void HTDisplay(void * queueSet)
         t_HTreading HTreceived;
 
 		/* Select the queue */
-        QueueHandle_t queue = ...;
+        QueueHandle_t queue = xQueueSelectFromSet(xQueueSet, portMAX_DELAY);
 		/* Receive from the queue */
-        BaseType_t xStatus = ...;
+        BaseType_t xStatus = xQueueReceive(queue, &HTreceived, 0);
         if (xStatus == pdPASS)
         {
             printf("Sensor ID %d: Temperature %d°C, humidity %d%%\n", 
