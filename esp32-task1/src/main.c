@@ -41,4 +41,4 @@ void vTaskCode(void * parameter)
   {
     ESP_LOGI(TAG, "Loop iteration %d\n", ++counter);
   }
-} 
+}
